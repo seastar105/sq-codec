@@ -38,13 +38,6 @@ repos:
       - id: pyupgrade
         args: [--py38-plus]
 
-  # python docstring formatting
-  - repo: https://github.com/myint/docformatter
-    rev: v1.5.1
-    hooks:
-      - id: docformatter
-        args: [--in-place, --wrap-summaries=120, --wrap-descriptions=120]
-
   # python check (PEP8), programming errors and code complexity
   - repo: https://github.com/PyCQA/flake8
     rev: 6.0.0
@@ -57,13 +50,6 @@ repos:
             "--exclude",
             "logs/*,data/*",
           ]
-
-  # python security linter
-  - repo: https://github.com/PyCQA/bandit
-    rev: "1.7.5"
-    hooks:
-      - id: bandit
-        args: ["-s", "B101"]
 
   # yaml formatting
   - repo: https://github.com/pre-commit/mirrors-prettier
@@ -91,15 +77,6 @@ repos:
           - mdformat_frontmatter
           # - mdformat-toc
           # - mdformat-black
-
-  # word spelling linter
-  - repo: https://github.com/codespell-project/codespell
-    rev: v2.2.4
-    hooks:
-      - id: codespell
-        args:
-          - --skip=logs/**,data/**,*.ipynb
-          - --ignore-words-list=numer
 
   # jupyter notebook cell output clearing
   - repo: https://github.com/kynan/nbstripout

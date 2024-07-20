@@ -26,7 +26,7 @@ rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 # more info: https://github.com/ashleve/rootutils
 # ------------------------------------------------------------------------------------ #
 
-from src.utils import (
+from sq_codec.utils import (
     RankedLogger,
     extras,
     get_metric_value,
@@ -41,8 +41,7 @@ log = RankedLogger(__name__, rank_zero_only=True)
 
 @task_wrapper
 def train(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-    """Trains the model. Can additionally evaluate on a testset, using best weights obtained during
-    training.
+    """Trains the model. Can additionally evaluate on a testset, using best weights obtained during training.
 
     This method is wrapped in optional @task_wrapper decorator, that controls the behavior during
     failure. Useful for multiruns, saving info about the crash, etc.
@@ -51,6 +50,9 @@ def train(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     :return: A tuple with metrics and dict with all instantiated objects.
     """
     # set seed for random number generators in pytorch, numpy and python.random
+    torch.backends.cuda.matmul.allow_tf32 = True
+    torch.backends.cudnn.allow_tf32 = True
+    torch.set_float32_matmul_precision("high")
     if cfg.get("seed"):
         L.seed_everything(cfg.seed, workers=True)
 
@@ -58,7 +60,7 @@ def train(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     datamodule: LightningDataModule = hydra.utils.instantiate(cfg.data)
 
     log.info(f"Instantiating model <{cfg.model._target_}>")
-    model: LightningModule = hydra.utils.instantiate(cfg.model)
+    model: LightningModule = hydra.utils.instantiate(cfg.model, _recursive_=False)
 
     log.info("Instantiating callbacks...")
     callbacks: List[Callback] = instantiate_callbacks(cfg.get("callbacks"))
@@ -120,9 +122,7 @@ def main(cfg: DictConfig) -> Optional[float]:
     metric_dict, _ = train(cfg)
 
     # safely retrieve metric value for hydra-based hyperparameter optimization
-    metric_value = get_metric_value(
-        metric_dict=metric_dict, metric_name=cfg.get("optimized_metric")
-    )
+    metric_value = get_metric_value(metric_dict=metric_dict, metric_name=cfg.get("optimized_metric"))
 
     # return optimized metric
     return metric_value

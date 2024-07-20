@@ -1,0 +1,55 @@
+_target_: sq_codec.lightning_modules.sq_codec.SQCodecLightningModule
+generator:
+  _target_: sq_codec.models.sq_codec.SQCodec
+  n_filters: 16
+  D: 128
+  level: 9
+  codebook_dim: 32
+  ratios: [2, 2, 4, 4, 5]
+  sample_rate: 16000
+  causal: False
+  encoder_grad_mult: 1.0
+  fsq: False
+discriminator:
+  _target_: sq_codec.modules.discriminator.MultiFrequencyDiscriminator
+  config:
+    hop_lengths: [32, 64, 128, 256, 512, 1024]
+    hidden_channels: [64, 128, 256, 512, 512, 512]
+    domain: double
+    mel_scale: true
+    sample_rate: 16000
+gen_loss:
+  _target_: sq_codec.losses.gen_loss.GeneratorSTFTLoss
+  fm_weight: 20
+  full_weight: 1
+  sub_weight: 1
+  full_fft_sizes: [512, 1024, 2048]
+  full_win_sizes: [480, 960, 1200]
+  full_hop_sizes: [120, 240, 300]
+  sub_num_bands: 6
+  sub_fft_sizes: [128, 256, 256]
+  sub_win_sizes: [80, 120, 200]
+  sub_hop_sizes: [20, 40, 50]
+disc_loss:
+  _target_: sq_codec.losses.disc_loss.MSEDiscriminatorLoss
+  config: null
+opt_g:
+  _target_: torch.optim.Adam
+  lr: 2e-3
+  betas: [0.8, 0.99]
+  eps: 1e-6
+opt_d:
+  _target_: torch.optim.Adam
+  lr: 2e-3
+  betas: [0.8, 0.99]
+  eps: 1e-6
+schd_g:
+  _target_: torch.optim.lr_scheduler.ExponentialLR
+  gamma: 0.999
+schd_d:
+  _target_: torch.optim.lr_scheduler.ExponentialLR
+  gamma: 0.999
+warmup_steps: 0
+num_samples: 4
+sample_freq: 5000
+do_compile: False
